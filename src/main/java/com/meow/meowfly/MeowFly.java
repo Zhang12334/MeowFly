@@ -65,7 +65,7 @@ public class MeowFly extends JavaPlugin implements Listener {
         // 加载语言配置和默认配置文件
         saveDefaultConfig();
         loadLanguage();
-
+        getCommand("mfly").setTabCompleter(new MeowFlyTabCompleter());
         // 初始化存储
         storageType = getConfig().getString("storage", "yml");
         if (storageType.equalsIgnoreCase("mysql")) {
@@ -89,7 +89,7 @@ public class MeowFly extends JavaPlugin implements Listener {
             }
         }.runTaskAsynchronously(this);
     }
-    
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         List<String> suggestions = new ArrayList<>();
