@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.meow</groupId>
-    <artifactId>MeowJoinCommand</artifactId>
+    <artifactId>MeowFly</artifactId>
     <version>beta</version>
     <packaging>jar</packaging>
 
-    <name>MeowJoinCommand</name>
+    <name>MeowFly</name>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
