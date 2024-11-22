@@ -1,0 +1,6 @@
+# 配置文件版本 / Configuration version
+version: 1.0
+
+# 语言（en或zh_cn）
+# Language, en / zh_cn
+language: zh_cn

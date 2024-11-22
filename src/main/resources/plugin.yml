@@ -1,0 +1,23 @@
+name: MeowFly
+version: 1.0
+main: com.meow.meowfly.MeowFly
+api-version: 1.16
+commands:
+  mfly:
+    description: Main command for MeowFly
+    usage: /mfly <use|reload>
+  mfly use:
+    description: Toggle fly mode
+    usage: /mfly use
+    permission: meowfly.use
+  mfly reload:
+    description: Reload configuration
+    usage: /mfly reload
+    permission: meowfly.reload
+permissions:
+  meowfly.use:
+    description: Allows player to use the /mfly use command
+    default: true
+  meowfly.reload:
+    description: Allows player to reload the plugin configuration
+    default: op
