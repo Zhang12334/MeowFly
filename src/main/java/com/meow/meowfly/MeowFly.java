@@ -7,14 +7,24 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
-import java.util.ArrayList;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MeowFly extends JavaPlugin implements Listener {
 
@@ -31,30 +41,45 @@ public class MeowFly extends JavaPlugin implements Listener {
     private String reloadedMessage;
     private String nopermissionMessage;
     private String flyModeEnabledMessage;
-    private String flyModeDisabledMessage; 
-    private String usageMessage;   
+    private String flyModeDisabledMessage;
+    private String usageMessage;
+    private String notplayerMessage;
+    private String failedtocreatejsonfileMessage;
+    private String failedtoreadjsonstatusMessage;
+    private String failedtosavejsonstatusMessage;
+    private String failedtoclosedatabaseconnectionMessage;
+    private String failedtoconnectdatabaseMessage;
+    private String failedtoreaddatabaseMessage;
+    private String failedtosavedatabaseMessage;
+
+    // 数据库或本地存储配置
+    private String storageType;
+    private Connection connection;
+    private File dataFile;
+    private Map<String, Boolean> flightData;
 
     @Override
     public void onEnable() {
-        // bstats
-        int pluginId = 23964;
-        Metrics metrics = new Metrics(this, pluginId);
-        loadLanguage(); // 加载语言配置
-        // 首次加载进行英文提示
-        File configFile = new File(getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            getLogger().warning("The default language is Simplified Chinese. If you need English, you can configure it in the config.yml.");
-        }
-        // 加载配置文件
+        // 加载语言配置和默认配置文件
         saveDefaultConfig();
+        loadLanguage();
 
+        // 初始化存储
+        storageType = getConfig().getString("storage", "json");
+        if (storageType.equalsIgnoreCase("mysql")) {
+            initMySQL();
+        } else {
+            initLocalStorage();
+        }
+
+        // 注册事件
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info(startupMessage);
 
+        // 启动时的版本检查
+        getLogger().info(startupMessage);
         String currentVersion = getDescription().getVersion();
         getLogger().info(nowusingversionMessage + " v" + currentVersion);
         getLogger().info(checkingupdateMessage);
-        // 异步更新检查
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -69,20 +94,28 @@ public class MeowFly extends JavaPlugin implements Listener {
 
         if ("zh_cn".equalsIgnoreCase(language)) {
             // 中文消息
-            startupMessage = "MeowFly 已加载！";
-            shutdownMessage = "MeowFly 已卸载！";
+            startupMessage = "MeowFly 已加载!";
+            shutdownMessage = "MeowFly 已卸载!";
             nowusingversionMessage = "当前使用版本:";
             checkingupdateMessage = "正在检查更新...";
-            checkfailedMessage = "检查更新失败，请检查你的网络状况！";
+            checkfailedMessage = "检查更新失败，请检查你的网络状况!";
             updateavailableMessage = "发现新版本:";
             updateurlMessage = "新版本下载地址:";
-            oldversionmaycauseproblemMessage = "旧版本可能会导致问题，请尽快更新！";
-            nowusinglatestversionMessage = "您正在使用最新版本！";
-            reloadedMessage = "配置文件已重载！";
-            nopermissionMessage = "你没有权限执行此命令！";
-            flyModeEnabledMessage = "§a飞行模式已开启！";
-            flyModeDisabledMessage = "§c飞行模式已关闭！"; 
-            usageMessage = "用法:";           
+            oldversionmaycauseproblemMessage = "旧版本可能会导致问题，请尽快更新!";
+            nowusinglatestversionMessage = "您正在使用最新版本!";
+            reloadedMessage = "配置文件已重载!";
+            nopermissionMessage = "你没有权限执行此命令!";
+            flyModeEnabledMessage = "§a飞行模式已开启!";
+            flyModeDisabledMessage = "§c飞行模式已关闭!";
+            usageMessage = "用法:";
+            notplayerMessage = "只有玩家才能执行此命令!";
+            failedtocreatejsonfileMessage = "无法创建飞行状态文件, 请检查你的硬盘是否已满!";
+            failedtoreadjsonstatusMessage = "无法读取飞行状态文件, 请检查你的配置文件是否损坏!";
+            failedtosavejsonstatusMessage = "无法保存飞行状态文件, 请检查你的配置文件是否损坏!";
+            failedtoclosedatabaseconnectionMessage = "无法关闭数据库连接, 请检查你的数据库配置!";
+            failedtoconnectdatabaseMessage = "无法连接至数据库, 请检查你的数据库配置!";
+            failedtoreaddatabaseMessage = "无法读取数据库数据, 请检查你的数据库配置!";
+            failedtosavedatabaseMessage = "无法保存数据库数据, 请检查你的数据库配置!";
         } else {
             // English message
             startupMessage = "MeowFly has been loaded!";
@@ -97,20 +130,190 @@ public class MeowFly extends JavaPlugin implements Listener {
             reloadedMessage = "Configuration file has been reloaded!";
             nopermissionMessage = "You do not have permission to execute this command!";
             flyModeEnabledMessage = "§aFly mode enabled!";
-            flyModeDisabledMessage = "§cFly mode disabled!";   
-            usageMessage = "Usage:";         
+            flyModeDisabledMessage = "§cFly mode disabled!";
+            usageMessage = "Usage:";
+            notplayerMessage = "Only players can execute this command!";
+            failedtocreatejsonfileMessage = "Failed to create the flight status file. Please check if your hard drive is full!";
+            failedtoreadjsonstatusMessage = "Failed to read the flight status file. Please check if your configuration file is corrupted!";
+            failedtosavejsonstatusMessage = "Failed to save the flight status file. Please check if your configuration file is corrupted!";
+            failedtoclosedatabaseconnectionMessage = "Failed to close the database connection. Please check your database configuration!";
+            failedtoconnectdatabaseMessage = "Failed to connect to the database. Please check your database configuration!";
+            failedtoreaddatabaseMessage = "Failed to read data from the database. Please check your database configuration!";
+            failedtosavedatabaseMessage = "Failed to save data to the database. Please check your database configuration!";
         }
+    }
+
+    private void initLocalStorage() {
+        flightData = new HashMap<>();
+        dataFile = new File(getDataFolder(), "flight_data.json");
+        if (!dataFile.exists()) {
+            try {
+                dataFile.createNewFile();
+            } catch (IOException e) {
+                getLogger().warning(failedtocreatejsonfileMessage);
+            }
+        } else {
+            loadLocalFlightData();
+        }
+    }
+
+    private void loadLocalFlightData() {
+        try {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
+            for (String playerName : config.getKeys(false)) {
+                flightData.put(playerName, config.getBoolean(playerName, false));
+            }
+        } catch (Exception e) {
+            getLogger().warning(failedtoreadjsonstatusMessage);
+        }
+    }
+
+    private void saveLocalFlightData() {
+        try {
+            FileConfiguration config = new YamlConfiguration();
+            for (Map.Entry<String, Boolean> entry : flightData.entrySet()) {
+                config.set(entry.getKey(), entry.getValue());
+            }
+            config.save(dataFile);
+        } catch (IOException e) {
+            getLogger().warning(failedtosavejsonstatusMessage);
+        }
+    }
+
+    private void initMySQL() {
+        try {
+            String host = getConfig().getString("mysql.host");
+            int port = getConfig().getInt("mysql.port");
+            String database = getConfig().getString("mysql.database");
+            String username = getConfig().getString("mysql.username");
+            String password = getConfig().getString("mysql.password");
+
+            connection = DriverManager.getConnection(
+                "jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
+
+            // 创建表
+            connection.createStatement().executeUpdate(
+                "CREATE TABLE IF NOT EXISTS player_flight (player_name VARCHAR(50) PRIMARY KEY, flight_status BOOLEAN)");
+
+        } catch (SQLException e) {
+            getLogger().warning(failedtoconnectdatabaseMessage);
+        }
+    }
+
+    private boolean getFlightStatus(String playerName) {
+        if (storageType.equalsIgnoreCase("mysql")) {
+            try {
+                PreparedStatement ps = connection.prepareStatement(
+                    "SELECT flight_status FROM player_flight WHERE player_name = ?");
+                ps.setString(1, playerName);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    return rs.getBoolean("flight_status");
+                }
+            } catch (SQLException e) {
+                getLogger().warning(failedtoreaddatabaseMessage);
+            }
+        } else {
+            return flightData.getOrDefault(playerName, false);
+        }
+        return false;
+    }
+
+    private void setFlightStatus(String playerName, boolean status) {
+        if (storageType.equalsIgnoreCase("mysql")) {
+            try {
+                PreparedStatement ps = connection.prepareStatement(
+                    "REPLACE INTO player_flight (player_name, flight_status) VALUES (?, ?)");
+                ps.setString(1, playerName);
+                ps.setBoolean(2, status);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                getLogger().warning(failedtosavedatabaseMessage);
+            }
+        } else {
+            flightData.put(playerName, status);
+            saveLocalFlightData();
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        boolean shouldAllowFlight = getFlightStatus(player.getName());
+
+        // 恢复飞行权限但不直接飞行
+        player.setAllowFlight(shouldAllowFlight);
+        player.setFlying(false);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        setFlightStatus(player.getName(), player.getAllowFlight());
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-        List<String> suggestions = new ArrayList<>();
-        if (args.length == 1) {         
-            suggestions.add("reload");
+    public void onDisable() {
+        getLogger().info(shutdownMessage);
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                getLogger().warning(failedtoclosedatabaseconnectionMessage);
+            }
         }
-        return suggestions;
+        saveLocalFlightData();
     }
 
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("mfly")) {
+            if (args.length == 0) {
+                sender.sendMessage(usageMessage + " /mfly <use|reload>");
+                return true;
+            }
+
+            // 重新加载配置命令
+            if (args[0].equalsIgnoreCase("reload")) {
+                if (sender.hasPermission("meowfly.reload")) {
+                    reloadConfig();
+                    loadLanguage();
+                    sender.sendMessage(ChatColor.GREEN + reloadedMessage);
+                } else {
+                    sender.sendMessage(ChatColor.RED + nopermissionMessage);
+                }
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("use")) {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + notplayerMessage);
+                    return true;
+                }
+                Player player = (Player) sender;
+
+                // 检查权限
+                if (!player.hasPermission("meowfly.use")) {
+                    player.sendMessage(ChatColor.RED + nopermissionMessage);
+                    return true;
+                }
+
+                // 切换飞行模式
+                if (player.getAllowFlight()) {
+                    player.setAllowFlight(false);
+                    player.setFlying(false);
+                    player.sendMessage(ChatColor.RED + flyModeDisabledMessage);
+                } else {
+                    player.setAllowFlight(true);
+                    player.sendMessage(ChatColor.GREEN + flyModeEnabledMessage);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 检查更新方法
     private void check_update() {
         // 获取当前版本号
         String currentVersion = getDescription().getVersion();
@@ -190,60 +393,5 @@ public class MeowFly extends JavaPlugin implements Listener {
             return url.substring(tagIndex + 4, endIndex);
         }
         return null;
-    }
-
-    @Override
-    public void onDisable() {
-        getLogger().info(shutdownMessage);
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("mfly")) {
-            if (args.length == 0) {
-                sender.sendMessage(usageMessage + " /mfly <use|reload>");
-                return true;
-            }
-
-            // 处理 /mfly use 命令
-            if (args[0].equalsIgnoreCase("use")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(nopermissionMessage);
-                    return true;
-                }
-
-                Player player = (Player) sender;
-
-                // 检查权限
-                if (!player.hasPermission("meowfly.use")) {
-                    player.sendMessage(nopermissionMessage);
-                    return true;
-                }
-
-                // 切换飞行模式
-                if (player.getAllowFlight()) {
-                    player.setAllowFlight(false);
-                    player.setFlying(false);
-                    player.sendMessage(flyModeDisabledMessage);
-                } else {
-                    player.setAllowFlight(true);
-                    player.sendMessage(flyModeEnabledMessage);
-                }
-                return true;
-            }
-
-            // 处理 /mfly reload 命令
-            if (args[0].equalsIgnoreCase("reload")) {
-                if (!sender.hasPermission("meowfly.reload")) {
-                    sender.sendMessage(nopermissionMessage);
-                    return true;
-                }
-                reloadConfig();
-                loadLanguage();
-                sender.sendMessage(reloadedMessage);
-                return true;
-            }
-        }
-        return false;
     }
 }
