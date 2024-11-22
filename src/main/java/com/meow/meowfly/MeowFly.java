@@ -95,7 +95,7 @@ public class MeowFly extends JavaPlugin implements Listener {
 
         // 如果没有提供任何参数，提示 "use" 和 "reload"
         if (args.length == 1) {
-            StringUtil.copyPartialMatches(args[0], List.of("use", "reload"), suggestions);
+            StringUtil.copyPartialMatches(args[0], Arrays.asList("use", "reload"), suggestions);
         }
         // 如果是 "mfly use"，没有额外的参数，返回空列表
         else if (args.length == 2 && args[0].equalsIgnoreCase("use")) {
@@ -284,6 +284,18 @@ public class MeowFly extends JavaPlugin implements Listener {
             }
         }
         saveLocalFlightData();
+    }
+
+    public void closeDatabaseConnection() {
+        if (connection != null) {
+            try {
+                connection.close(); // 关闭数据库连接
+                connection = null;  // 将连接设置为 null，表示已关闭
+            } catch (SQLException e) {
+                // 如果关闭连接时发生错误，捕获并打印异常信息
+                getLogger().warning("Failed to close database connection: " + e.getMessage());
+            }
+        }
     }
 
     @Override
