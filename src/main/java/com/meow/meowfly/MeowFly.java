@@ -65,7 +65,6 @@ public class MeowFly extends JavaPlugin implements Listener {
         // 加载语言配置和默认配置文件
         saveDefaultConfig();
         loadLanguage();
-        getCommand("mfly").setTabCompleter(new MeowFlyTabCompleter());
         // 初始化存储
         storageType = getConfig().getString("storage", "yml");
         if (storageType.equalsIgnoreCase("mysql")) {
