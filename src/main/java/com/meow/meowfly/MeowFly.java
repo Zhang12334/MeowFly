@@ -270,19 +270,16 @@ public class MeowFly extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-
-        // 延迟 5 tick 查询飞行状态
-        getScheduler().runTaskLater(this, new BukkitRunnable() {
+        new BukkitRunnable() {
             @Override
             public void run() {
-                // 获取飞行状态
                 boolean shouldAllowFlight = getFlightStatus(player.getName());
 
                 // 恢复飞行权限但不直接飞行
                 player.setAllowFlight(shouldAllowFlight);
                 player.setFlying(false);
             }
-        }, 5L);  // 延迟 5 tick
+        }.runTaskLater(this, 5L);  // 5L 是延迟的 tick 数量
     }
 
     @EventHandler
