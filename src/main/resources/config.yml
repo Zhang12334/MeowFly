@@ -5,9 +5,9 @@ version: 1.0
 # Language, en / zh_cn
 language: zh_cn
 
-# json或mysql，必选项
-# json or mysql
-storage: json
+# yml或mysql，必选项
+# yml or mysql
+storage: yml
 
 # 若存储选项选择mysql则必填下面内容
 # database settings

@@ -6,14 +6,15 @@ commands:
   mfly:
     description: Main command for MeowFly
     usage: /mfly <use|reload>
-  mfly use:
-    description: Toggle fly mode
-    usage: /mfly use
-    permission: meowfly.use
-  mfly reload:
-    description: Reload configuration
-    usage: /mfly reload
-    permission: meowfly.reload
+    subcommands:
+      use:
+        description: Toggle fly mode
+        usage: /mfly use
+        permission: meowfly.use
+      reload:
+        description: Reload configuration
+        usage: /mfly reload
+        permission: meowfly.reload
 permissions:
   meowfly.use:
     description: Allows player to use the /mfly use command

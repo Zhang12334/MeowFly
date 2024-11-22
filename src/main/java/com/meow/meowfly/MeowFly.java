@@ -46,9 +46,9 @@ public class MeowFly extends JavaPlugin implements Listener {
     private String flyModeDisabledMessage;
     private String usageMessage;
     private String notplayerMessage;
-    private String failedtocreatejsonfileMessage;
-    private String failedtoreadjsonstatusMessage;
-    private String failedtosavejsonstatusMessage;
+    private String failedtocreateymlfileMessage;
+    private String failedtoreadymlstatusMessage;
+    private String failedtosaveymlstatusMessage;
     private String failedtoclosedatabaseconnectionMessage;
     private String failedtoconnectdatabaseMessage;
     private String failedtoreaddatabaseMessage;
@@ -67,7 +67,7 @@ public class MeowFly extends JavaPlugin implements Listener {
         loadLanguage();
 
         // 初始化存储
-        storageType = getConfig().getString("storage", "json");
+        storageType = getConfig().getString("storage", "yml");
         if (storageType.equalsIgnoreCase("mysql")) {
             initMySQL();
         } else {
@@ -88,6 +88,26 @@ public class MeowFly extends JavaPlugin implements Listener {
                 check_update();
             }
         }.runTaskAsynchronously(this);
+    }
+    
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+        List<String> suggestions = new ArrayList<>();
+
+        // 如果没有提供任何参数，提示 "use" 和 "reload"
+        if (args.length == 1) {
+            StringUtil.copyPartialMatches(args[0], List.of("use", "reload"), suggestions);
+        }
+        // 如果是 "mfly use"，没有额外的参数，返回空列表
+        else if (args.length == 2 && args[0].equalsIgnoreCase("use")) {
+            // 无额外补全需要
+        }
+        // 如果是 "mfly reload"，没有额外的参数，返回空列表
+        else if (args.length == 2 && args[0].equalsIgnoreCase("reload")) {
+            // 无额外补全需要
+        }
+
+        return suggestions;
     }
 
     private void loadLanguage() {
@@ -111,9 +131,9 @@ public class MeowFly extends JavaPlugin implements Listener {
             flyModeDisabledMessage = "§c飞行模式已关闭!";
             usageMessage = "用法:";
             notplayerMessage = "只有玩家才能执行此命令!";
-            failedtocreatejsonfileMessage = "无法创建飞行状态文件, 请检查你的硬盘是否已满!";
-            failedtoreadjsonstatusMessage = "无法读取飞行状态文件, 请检查你的配置文件是否损坏!";
-            failedtosavejsonstatusMessage = "无法保存飞行状态文件, 请检查你的配置文件是否损坏!";
+            failedtocreateymlfileMessage = "无法创建飞行状态文件, 请检查你的硬盘是否已满!";
+            failedtoreadymlstatusMessage = "无法读取飞行状态文件, 请检查你的配置文件是否损坏!";
+            failedtosaveymlstatusMessage = "无法保存飞行状态文件, 请检查你的配置文件是否损坏!";
             failedtoclosedatabaseconnectionMessage = "无法关闭数据库连接, 请检查你的数据库配置!";
             failedtoconnectdatabaseMessage = "无法连接至数据库, 请检查你的数据库配置!";
             failedtoreaddatabaseMessage = "无法读取数据库数据, 请检查你的数据库配置!";
@@ -135,9 +155,9 @@ public class MeowFly extends JavaPlugin implements Listener {
             flyModeDisabledMessage = "§cFly mode disabled!";
             usageMessage = "Usage:";
             notplayerMessage = "Only players can execute this command!";
-            failedtocreatejsonfileMessage = "Failed to create the flight status file. Please check if your hard drive is full!";
-            failedtoreadjsonstatusMessage = "Failed to read the flight status file. Please check if your configuration file is corrupted!";
-            failedtosavejsonstatusMessage = "Failed to save the flight status file. Please check if your configuration file is corrupted!";
+            failedtocreateymlfileMessage = "Failed to create the flight status file. Please check if your hard drive is full!";
+            failedtoreadymlstatusMessage = "Failed to read the flight status file. Please check if your configuration file is corrupted!";
+            failedtosaveymlstatusMessage = "Failed to save the flight status file. Please check if your configuration file is corrupted!";
             failedtoclosedatabaseconnectionMessage = "Failed to close the database connection. Please check your database configuration!";
             failedtoconnectdatabaseMessage = "Failed to connect to the database. Please check your database configuration!";
             failedtoreaddatabaseMessage = "Failed to read data from the database. Please check your database configuration!";
@@ -147,12 +167,12 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     private void initLocalStorage() {
         flightData = new HashMap<>();
-        dataFile = new File(getDataFolder(), "flight_data.json");
+        dataFile = new File(getDataFolder(), "flight_data.yml");
         if (!dataFile.exists()) {
             try {
                 dataFile.createNewFile();
             } catch (IOException e) {
-                getLogger().warning(failedtocreatejsonfileMessage);
+                getLogger().warning(failedtocreateymlfileMessage);
             }
         } else {
             loadLocalFlightData();
@@ -166,7 +186,7 @@ public class MeowFly extends JavaPlugin implements Listener {
                 flightData.put(playerName, config.getBoolean(playerName, false));
             }
         } catch (Exception e) {
-            getLogger().warning(failedtoreadjsonstatusMessage);
+            getLogger().warning(failedtoreadymlstatusMessage);
         }
     }
 
@@ -178,7 +198,7 @@ public class MeowFly extends JavaPlugin implements Listener {
             }
             config.save(dataFile);
         } catch (IOException e) {
-            getLogger().warning(failedtosavejsonstatusMessage);
+            getLogger().warning(failedtosaveymlstatusMessage);
         }
     }
 
@@ -191,7 +211,7 @@ public class MeowFly extends JavaPlugin implements Listener {
             String password = getConfig().getString("mysql.password");
 
             connection = DriverManager.getConnection(
-                "jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
+                "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true", username, password);
 
             // 创建表
             connection.createStatement().executeUpdate(
@@ -278,14 +298,35 @@ public class MeowFly extends JavaPlugin implements Listener {
             // 重新加载配置命令
             if (args[0].equalsIgnoreCase("reload")) {
                 if (sender.hasPermission("meowfly.reload")) {
+                    // 获取当前存储类型
+                    String currentStorageType = getConfig().getString("storage-type", "yml"); // 默认是 yml
+
+                    // 调用配置加载方法
                     reloadConfig();
                     loadLanguage();
+
+                    // 获取新的存储类型
+                    String newStorageType = getConfig().getString("storage-type", "yml");
+
+                    // 如果存储类型改变了，进行相应的处理
+                    if (!currentStorageType.equals(newStorageType)) {
+                        if (currentStorageType.equals("mysql") && newStorageType.equals("yml")) {
+                            // 从 MySQL 改为 yml，关闭数据库连接并初始化本地文件
+                            closeDatabaseConnection();
+                            initLocalStorage(); // 重新初始化
+                        } else if (currentStorageType.equals("yml") && newStorageType.equals("mysql")) {
+                            // 从 yml 改为 MySQL，进行数据库初始化
+                            initLocalStorage(); // 初始化
+                        }
+                    }
+
                     sender.sendMessage(ChatColor.GREEN + reloadedMessage);
                 } else {
                     sender.sendMessage(ChatColor.RED + nopermissionMessage);
                 }
                 return true;
             }
+
 
             if (args[0].equalsIgnoreCase("use")) {
                 if (!(sender instanceof Player)) {
