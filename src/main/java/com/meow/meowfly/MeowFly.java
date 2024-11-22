@@ -97,7 +97,7 @@ public class MeowFly extends JavaPlugin implements Listener {
 
         // 如果没有提供任何参数，提示 "use" 和 "reload"
         if (args.length == 1) {
-            StringUtil.copyPartialMatches(args[0], Arrays.asList("use", "reload"), suggestions);
+            StringUtils.copyPartialMatches(args[0], Arrays.asList("use", "reload"), suggestions);
         }
         // 如果是 "mfly use"，没有额外的参数，返回空列表
         else if (args.length == 2 && args[0].equalsIgnoreCase("use")) {
