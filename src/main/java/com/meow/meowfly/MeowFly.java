@@ -272,7 +272,7 @@ public class MeowFly extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
 
         // 延迟 5 tick 查询飞行状态
-        Bukkit.getScheduler().runTaskLater(MyPlugin.getInstance(), new BukkitRunnable() {
+        getScheduler().runTaskLater(this, new BukkitRunnable() {
             @Override
             public void run() {
                 // 获取飞行状态
