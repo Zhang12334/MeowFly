@@ -12,7 +12,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 
 import java.io.File;
@@ -97,7 +96,15 @@ public class MeowFly extends JavaPlugin implements Listener {
 
         // 如果没有提供任何参数，提示 "use" 和 "reload"
         if (args.length == 1) {
-            StringUtils.copyPartialMatches(args[0], Arrays.asList("use", "reload"), suggestions);
+            // 创建一个匹配的候选列表
+            List<String> commands = Arrays.asList("use", "reload");
+
+            // 根据输入的字符串，找出部分匹配的命令
+            for (String commandOption : commands) {
+                if (commandOption.startsWith(args[0].toLowerCase())) {
+                    suggestions.add(commandOption);  // 添加匹配的建议到 suggestions 列表
+                }
+            }
         }
         // 如果是 "mfly use"，没有额外的参数，返回空列表
         else if (args.length == 2 && args[0].equalsIgnoreCase("use")) {
@@ -110,6 +117,7 @@ public class MeowFly extends JavaPlugin implements Listener {
 
         return suggestions;
     }
+
 
     private void loadLanguage() {
         FileConfiguration config = getConfig();
