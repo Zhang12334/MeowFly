@@ -326,14 +326,14 @@ public class MeowFly extends JavaPlugin implements Listener {
             if (args[0].equalsIgnoreCase("reload")) {
                 if (sender.hasPermission("meowfly.reload")) {
                     // 获取当前存储类型
-                    String currentStorageType = getConfig().getString("storage-type", "yml"); // 默认是 yml
+                    String currentStorageType = getConfig().getString("storage", "yml"); // 默认是 yml
 
                     // 调用配置加载方法
                     reloadConfig();
                     loadLanguage();
 
                     // 获取新的存储类型
-                    String newStorageType = getConfig().getString("storage-type", "yml");
+                    String newStorageType = getConfig().getString("storage", "yml");
 
                     // 如果存储类型改变了，进行相应的处理
                     if (!currentStorageType.equals(newStorageType)) {
