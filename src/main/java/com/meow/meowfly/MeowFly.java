@@ -292,8 +292,9 @@ public class MeowFly extends JavaPlugin implements Listener {
             } catch (SQLException e) {
                 getLogger().warning(failedtoclosedatabaseconnectionMessage);
             }
+        } else {
+            saveLocalFlightData();
         }
-        saveLocalFlightData();
     }
 
     public void closeDatabaseConnection() {
