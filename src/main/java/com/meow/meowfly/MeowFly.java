@@ -47,7 +47,6 @@ public class MeowFly extends JavaPlugin implements Listener {
         }
         // 加载配置文件
         saveDefaultConfig();
-        configHandler = new ConfigHandler(this);
 
         getServer().getPluginManager().registerEvents(this, this);
         getLogger().info(startupMessage);
@@ -191,12 +190,6 @@ public class MeowFly extends JavaPlugin implements Listener {
             return url.substring(tagIndex + 4, endIndex);
         }
         return null;
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        configHandler.checkAndExecuteConfigs(player);  // 执行配置
     }
 
     @Override
