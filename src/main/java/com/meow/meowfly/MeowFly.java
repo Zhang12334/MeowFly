@@ -329,6 +329,7 @@ public class MeowFly extends JavaPlugin implements Listener {
                     String currentStorageType = getConfig().getString("storage", "yml"); // 默认是 yml
 
                     // 调用配置加载方法
+                    saveDefaultConfig();
                     reloadConfig();
                     loadLanguage();
 
