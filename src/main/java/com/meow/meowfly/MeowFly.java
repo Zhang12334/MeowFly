@@ -63,6 +63,9 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        // bstats
+        int pluginId = 23964;
+        Metrics metrics = new Metrics(this, pluginId);
         // 加载语言配置和默认配置文件
         saveDefaultConfig();
         loadLanguage();

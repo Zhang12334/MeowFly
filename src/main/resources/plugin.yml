@@ -1,5 +1,5 @@
 name: MeowFly
-version: 1.1
+version: 1.2
 main: com.meow.meowfly.MeowFly
 api-version: 1.16
 commands:
