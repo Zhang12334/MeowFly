@@ -274,10 +274,12 @@ public class MeowFly extends JavaPlugin implements Listener {
             @Override
             public void run() {
                 boolean shouldAllowFlight = getFlightStatus(player.getName());
-
-                // 恢复飞行权限但不直接飞行
-                player.setAllowFlight(shouldAllowFlight);
-                player.setFlying(false);
+                // 检查权限
+                if (!player.hasPermission("meowfly.use")) {
+                    // 恢复飞行权限但不直接飞行
+                    player.setAllowFlight(shouldAllowFlight);
+                    player.setFlying(false);
+                }
             }
         }.runTaskLater(this, 5L);  // 5L 是延迟的 tick 数量
     }
