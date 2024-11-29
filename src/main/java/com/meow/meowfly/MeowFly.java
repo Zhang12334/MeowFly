@@ -273,23 +273,28 @@ public class MeowFly extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        // 延迟 5 tick 执行异步任务
         new BukkitRunnable() {
             @Override
             public void run() {
+                // 异步获取飞行状态
+                boolean shouldAllowFlight = getFlightStatus(player.getName());
+
+                // 使用主线程进行权限检查和状态设置
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        boolean shouldAllowFlight = getFlightStatus(player.getName());
-                        // 检查权限
+                        // 检查玩家是否有权限
                         if (!player.hasPermission("meowfly.use")) {
                             // 恢复飞行权限但不直接飞行
                             player.setAllowFlight(shouldAllowFlight);
                             player.setFlying(false);
                         }
                     }
-                }.runTaskAsynchronously(this);
+                }.runTask(this);  // 在主线程中执行
             }
-        }.runTaskLater(this, 5L);  // 5L 是延迟的 tick 数量
+        }.runTaskLater(this, 5L);  // 延迟 5 tick 执行
     }
 
     @EventHandler
