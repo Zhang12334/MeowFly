@@ -292,9 +292,9 @@ public class MeowFly extends JavaPlugin implements Listener {
                             player.setFlying(false);
                         }
                     }
-                }.runTask(this);  // 在主线程中执行
+                }.runTask(MeowFly.this);  // 在主线程中执行
             }
-        }.runTaskLater(this, 5L);  // 延迟 5 tick 执行
+        }.runTaskLater(MeowFly.this, 5L);  // 延迟 5 tick 执行
     }
 
     @EventHandler
