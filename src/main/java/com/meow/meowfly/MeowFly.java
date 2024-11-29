@@ -331,7 +331,7 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("mfly")) {
+        if (command.getName().equalsIgnoreCase("mfly") || command.getName().equalsIgnoreCase("meowfly")) {
             if (args.length == 0) {
                 sender.sendMessage(usageMessage + " /mfly <use|reload>");
                 return true;
