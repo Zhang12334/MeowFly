@@ -236,22 +236,17 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     private boolean getFlightStatus(String playerName) {
         if (storageType.equalsIgnoreCase("mysql")) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        PreparedStatement ps = connection.prepareStatement(
-                            "SELECT flight_status FROM player_flight WHERE player_name = ?");
-                        ps.setString(1, playerName);
-                        ResultSet rs = ps.executeQuery();
-                        if (rs.next()) {
-                            return rs.getBoolean("flight_status");
-                        }
-                    } catch (SQLException e) {
-                        getLogger().warning(failedtoreaddatabaseMessage);
-                    }
+            try {
+                PreparedStatement ps = connection.prepareStatement(
+                    "SELECT flight_status FROM player_flight WHERE player_name = ?");
+                ps.setString(1, playerName);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    return rs.getBoolean("flight_status");
                 }
-            }.runTaskAsynchronously(this);
+            } catch (SQLException e) {
+                getLogger().warning(failedtoreaddatabaseMessage);
+            }
         } else {
             return flightData.getOrDefault(playerName, false);
         }
@@ -260,20 +255,15 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     private void setFlightStatus(String playerName, boolean status) {
         if (storageType.equalsIgnoreCase("mysql")) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        PreparedStatement ps = connection.prepareStatement(
-                            "REPLACE INTO player_flight (player_name, flight_status) VALUES (?, ?)");
-                        ps.setString(1, playerName);
-                        ps.setBoolean(2, status);
-                        ps.executeUpdate();
-                    } catch (SQLException e) {
-                        getLogger().warning(failedtosavedatabaseMessage);
-                    }
-                }
-            }.runTaskAsynchronously(this);
+            try {
+                PreparedStatement ps = connection.prepareStatement(
+                    "REPLACE INTO player_flight (player_name, flight_status) VALUES (?, ?)");
+                ps.setString(1, playerName);
+                ps.setBoolean(2, status);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                getLogger().warning(failedtosavedatabaseMessage);
+            }
         } else {
             flightData.put(playerName, status);
             saveLocalFlightData();
@@ -286,13 +276,18 @@ public class MeowFly extends JavaPlugin implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                boolean shouldAllowFlight = getFlightStatus(player.getName());
-                // 检查权限
-                if (!player.hasPermission("meowfly.use")) {
-                    // 恢复飞行权限但不直接飞行
-                    player.setAllowFlight(shouldAllowFlight);
-                    player.setFlying(false);
-                }
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        boolean shouldAllowFlight = getFlightStatus(player.getName());
+                        // 检查权限
+                        if (!player.hasPermission("meowfly.use")) {
+                            // 恢复飞行权限但不直接飞行
+                            player.setAllowFlight(shouldAllowFlight);
+                            player.setFlying(false);
+                        }
+                    }
+                }.runTaskAsynchronously(this);
             }
         }.runTaskLater(this, 5L);  // 5L 是延迟的 tick 数量
     }
@@ -300,7 +295,12 @@ public class MeowFly extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        setFlightStatus(player.getName(), player.getAllowFlight());
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                setFlightStatus(player.getName(), player.getAllowFlight());
+            }
+        }.runTaskAsynchronously(this);
     }
 
     @Override
