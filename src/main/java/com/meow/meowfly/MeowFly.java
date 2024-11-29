@@ -236,17 +236,22 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     private boolean getFlightStatus(String playerName) {
         if (storageType.equalsIgnoreCase("mysql")) {
-            try {
-                PreparedStatement ps = connection.prepareStatement(
-                    "SELECT flight_status FROM player_flight WHERE player_name = ?");
-                ps.setString(1, playerName);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    return rs.getBoolean("flight_status");
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    try {
+                        PreparedStatement ps = connection.prepareStatement(
+                            "SELECT flight_status FROM player_flight WHERE player_name = ?");
+                        ps.setString(1, playerName);
+                        ResultSet rs = ps.executeQuery();
+                        if (rs.next()) {
+                            return rs.getBoolean("flight_status");
+                        }
+                    } catch (SQLException e) {
+                        getLogger().warning(failedtoreaddatabaseMessage);
+                    }
                 }
-            } catch (SQLException e) {
-                getLogger().warning(failedtoreaddatabaseMessage);
-            }
+            }.runTaskAsynchronously(this);
         } else {
             return flightData.getOrDefault(playerName, false);
         }
@@ -255,15 +260,20 @@ public class MeowFly extends JavaPlugin implements Listener {
 
     private void setFlightStatus(String playerName, boolean status) {
         if (storageType.equalsIgnoreCase("mysql")) {
-            try {
-                PreparedStatement ps = connection.prepareStatement(
-                    "REPLACE INTO player_flight (player_name, flight_status) VALUES (?, ?)");
-                ps.setString(1, playerName);
-                ps.setBoolean(2, status);
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                getLogger().warning(failedtosavedatabaseMessage);
-            }
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    try {
+                        PreparedStatement ps = connection.prepareStatement(
+                            "REPLACE INTO player_flight (player_name, flight_status) VALUES (?, ?)");
+                        ps.setString(1, playerName);
+                        ps.setBoolean(2, status);
+                        ps.executeUpdate();
+                    } catch (SQLException e) {
+                        getLogger().warning(failedtosavedatabaseMessage);
+                    }
+                }
+            }.runTaskAsynchronously(this);
         } else {
             flightData.put(playerName, status);
             saveLocalFlightData();
