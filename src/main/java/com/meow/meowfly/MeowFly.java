@@ -54,6 +54,7 @@ public class MeowFly extends JavaPlugin implements Listener {
     private String failedtoconnectdatabaseMessage;
     private String failedtoreaddatabaseMessage;
     private String failedtosavedatabaseMessage;
+    private Integer tick_delay;
 
     // 数据库或本地存储配置
     private String storageType;
@@ -71,6 +72,7 @@ public class MeowFly extends JavaPlugin implements Listener {
         loadLanguage();
         // 初始化存储
         storageType = getConfig().getString("storage", "yml");
+        tick_delay = getConfig().getInt("tick_delay", 20);
         if (storageType.equalsIgnoreCase("mysql")) {
             initMySQL();
         } else {
@@ -274,7 +276,7 @@ public class MeowFly extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        // 延迟 5 tick 执行异步任务
+        // 延迟 自定义 tick 执行异步任务
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -286,15 +288,20 @@ public class MeowFly extends JavaPlugin implements Listener {
                     @Override
                     public void run() {
                         // 检查玩家是否有权限
-                        if (!player.hasPermission("meowfly.use")) {
-                            // 恢复飞行权限但不直接飞行
-                            player.setAllowFlight(shouldAllowFlight);
-                            player.setFlying(false);
+                        if (player.hasPermission("meowfly.use")) {
+                            if (shouldAllowFlight){
+                                // 如果退出之前为飞行状态，恢复飞行权限
+                                player.setAllowFlight(true);
+                                player.setFlying(true);                                
+                            } else {
+                                // 允许飞行但不设置飞行
+                                player.setAllowFlight(true);
+                            }
                         }
                     }
                 }.runTask(MeowFly.this);  // 在主线程中执行
             }
-        }.runTaskLater(MeowFly.this, 5L);  // 延迟 5 tick 执行
+        }.runTaskLater(MeowFly.this, tick_delay);  // 延迟 自定义 tick 执行
     }
 
     @EventHandler
@@ -303,7 +310,7 @@ public class MeowFly extends JavaPlugin implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                setFlightStatus(player.getName(), player.getAllowFlight());
+                setFlightStatus(player.getName(), player.isFlying());
             }
         }.runTaskAsynchronously(this);
     }
