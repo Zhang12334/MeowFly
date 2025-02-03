@@ -26,7 +26,7 @@ jobs:
         run: mvn clean package
 
       - name: Upload JAR file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: MeowFly-build${{ github.run_number }} # 使用构建编号
           path: target/*.jar
