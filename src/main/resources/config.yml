@@ -10,7 +10,7 @@ language: zh_cn
 storage: yml
 
 # 玩家进服后恢复飞行前延时的时间，单位为tick
-# Tick delay after player join server
+# The delay time (in ticks) for restoring flight after a player joins the server
 tick_delay: 10
 
 # 若存储选项选择mysql则必填下面内容
