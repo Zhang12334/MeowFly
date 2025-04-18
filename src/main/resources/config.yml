@@ -1,8 +1,8 @@
 # 配置文件版本 / Configuration version
-version: 1.1
+version: 1.2
 
-# 语言（en或zh_cn）
-# Language, en / zh_cn
+# 语言（en_us或zh_cn）
+# Language, en_us / zh_cn
 language: zh_cn
 
 # yml或mysql，必选项
