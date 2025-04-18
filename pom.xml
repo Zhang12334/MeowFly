@@ -18,18 +18,22 @@
     </properties>
 
     <repositories>
+    
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/repository/public/</url>
         </repository>
+
         <!-- 添加 JitPack 仓库 -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+
     </repositories>
 
     <dependencies>
+
         <!-- Spigot API 依赖 -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -37,6 +41,7 @@
             <version>${spigot.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <!-- Vault API 依赖, 从 JitPack 获取 -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
@@ -44,10 +49,21 @@
             <version>1.7</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- org.json 依赖 -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
+
         <plugins>
+        
             <!-- Maven 编译插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -59,47 +75,19 @@
                 </configuration>
             </plugin>
 
-            <!-- 资源文件插件，确保将 plugin.yml 和 config.yml 打包到 JAR 文件中 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/resources</directory>
-                                    <includes>
-                                        <include>**/*.yml</include>
-                                        <include>**/*.properties</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Maven JAR 插件，用于打包插件并设置主类 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.meow.meowjoincommand.MeowJoinCommand</mainClass>  <!-- 主类 -->
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
         </plugins>
+
+        <!-- 确保资源文件正确处理 -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>plugin.yml</include>
+                    <include>config.yml</include>
+                </includes>
+            </resource>
+        </resources>
+
     </build>
+
 </project>
