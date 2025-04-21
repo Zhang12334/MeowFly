@@ -19,18 +19,18 @@ public class LanguageManager {
 
     public void loadLanguage() {
         // 有效的语言列表
-        Set<String> validLanguages = new HashSet<>(Arrays.asList("zh_cn", "en_us"));
+        Set<String> validLanguages = new HashSet<>(Arrays.asList("zh_hans", "zh_hant", "en_us", "ja_jp"));
 
-        // 读取配置中的语言设置，默认为zh_cn
-        String language = config.getString("language", "zh_cn");
+        // 读取配置中的语言设置，默认为zh_hans
+        String language = config.getString("language", "zh_hans");
 
         // 如果读取的语言不在有效列表中，则设为默认值
         if (!validLanguages.contains(language.toLowerCase())) {
-            language = "zh_cn";
+            language = "zh_hans";
         }
         messages.clear();
 
-        if ("zh_cn".equalsIgnoreCase(language)) {
+        if ("zh_hans".equalsIgnoreCase(language)) {
             // 中文消息
             messages.put("TranslationContributors", "当前语言: 简体中文 (贡献者: Zhang1233)");
             messages.put("CanNotFoundMeowLibs", "未找到 MeowLibs, 请安装前置依赖 MeowLibs!");            
@@ -57,7 +57,7 @@ public class LanguageManager {
             messages.put("failedtoconnectdatabase", "无法连接至数据库, 请检查你的数据库配置!");
             messages.put("failedtoreaddatabase", "无法读取数据库数据, 请检查你的数据库配置!");
             messages.put("failedtosavedatabase", "无法保存数据库数据, 请检查你的数据库配置!");
-        } else if ("zh_tc".equalsIgnoreCase(language)) {
+        } else if ("zh_hant".equalsIgnoreCase(language)) {
             // 繁體中文消息
             messages.put("TranslationContributors", "當前語言: 繁體中文 (貢獻者: Zhang1233)");
             messages.put("CanNotFoundMeowLibs", "未找到 MeowLibs, 请安装前置依赖 MeowLibs!");
