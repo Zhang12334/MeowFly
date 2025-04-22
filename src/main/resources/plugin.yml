@@ -1,6 +1,6 @@
 name: MeowFly
-version: 1.6.1
-main: com.meow.meowfly.MeowFly
+version: 1.6.2
+main: com.meowfly.MeowFly
 api-version: 1.16
 depend:
   - MeowLibs
